@@ -1,17 +1,39 @@
 // service-worker.js
 
-// সেভ ইভেন্ট লিস্টেনার
+const cacheName = 'hasantechnology-cache-v1';
+const cacheFiles = [
+  '/',
+  '/index.html',
+  '/path/to/your/file1.css',
+  '/path/to/your/file2.js',
+  '/path/to/your/image.png',
+  // অন্যান্য ফাইল এবং রাউট সংযোজন যেগুলি আপনি ক্যাচ করতে চান
+];
+
 self.addEventListener('install', event => {
-  console.log('Service Worker: Installing...');
+  event.waitUntil(
+    caches.open(cacheName)
+      .then(cache => cache.addAll(cacheFiles))
+  );
 });
 
-// একটিভ ইভেন্ট লিস্টেনার
 self.addEventListener('activate', event => {
-  console.log('Service Worker: Activating...');
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(keys.map(key => {
+        if (key !== cacheName) {
+          return caches.delete(key);
+        }
+      }));
+    })
+  );
 });
 
-// ফেচ ইভেন্ট লিস্টেনার
 self.addEventListener('fetch', event => {
-  console.log('Service Worker: Fetching...');
-  event.respondWith(fetch(event.request));
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        return response || fetch(event.request);
+      })
+  );
 });
